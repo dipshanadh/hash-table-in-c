@@ -3,10 +3,15 @@
 #include "hash_table.h"
 
 int main() {
-	printf("Creating a hash table...\n");
 	ht_hash_table *ht = ht_new();
 
-	printf("Destroying a hash table...\n");
+	ht_insert(ht, "name", "Dipshan Adhikari");
+	ht_insert(ht, "country", "Nepal");
+	ht_insert(ht, "hobby", "programming");
+
+	printf("%s\n", ht_search(ht, "name"));
+	printf("%s\n", ht_search(ht, "hobby"));
+
 	ht_del_hash_table(ht);
 
 	return 0;

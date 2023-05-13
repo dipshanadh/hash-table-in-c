@@ -64,3 +64,39 @@ static int ht_get_hash(
 
 	return (hash_a + (attempts * (hash_b + 1))) % num_bucekts;
 }
+
+void ht_insert(ht_hash_table *ht, const char *key, const char *value) {
+	ht_item *item = ht_new_item(key, value);
+	ht_item *curr_item;
+
+	int index;
+	int i = 0;
+	
+	do {
+		index		= ht_get_hash(item->key, ht->size, i);
+		curr_item 	= ht->items[index];
+		i++;
+	} while(curr_item != NULL);
+
+	ht->items[index] = item;
+	ht->count++;
+}
+
+char *ht_search(ht_hash_table *ht, const char *key) {
+	ht_item *item;
+
+	int index;
+	int i = 0;
+	
+	do {
+		index 	= ht_get_hash(key, ht->size, i);
+		item	= ht->items[index];
+
+		if(strcmp(item->key, key) == 0)
+			return item->value;
+
+		i++;
+	} while(item != NULL);
+
+	return NULL;
+}
