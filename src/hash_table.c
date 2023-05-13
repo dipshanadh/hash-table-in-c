@@ -4,6 +4,9 @@
 
 #include "hash_table.h"
 
+#define HT_PRIME_1 151
+#define HT_PRIME_2 163
+
 static ht_item* ht_new_item(const char *k, const char *v) {
 	ht_item *i 	= malloc(sizeof(ht_item));
 
@@ -51,4 +54,13 @@ static int ht_hash(const char *s, const int a, const int m) {
 	}
 
 	return (int)hash;
+}
+
+static int ht_get_hash(
+	const char *s, const int num_bucekts, const int attempts
+) {
+	const int hash_a = ht_hash(s, HT_PRIME_1, num_bucekts);
+	const int hash_b = ht_hash(s, HT_PRIME_2, num_bucekts);
+
+	return (hash_a + (attempts * (hash_b + 1))) % num_bucekts;
 }
