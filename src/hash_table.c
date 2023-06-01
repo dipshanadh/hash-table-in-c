@@ -4,11 +4,20 @@
 
 #include "hash_table.h"
 
-#define HT_PRIME_1 151
-#define HT_PRIME_2 163
+/*
+ * "HT_PRIME_1" and "HT_PRIME_2" are values in hashing algorithm
+ */
+static const int HT_PRIME_1 = 151;
+static const int HT_PRIME_2 = 163;
 
-static ht_item HT_DELETED_ITEM = {NULL, NULL};
+/*
+ * "HT_DELETED_ITEM" is used to mark a bucket as deleted
+ */
+static ht_item HT_DELETED_ITEM = { NULL, NULL };
 
+/*
+ * Creates a new item containing "k": "v"
+ */
 static ht_item* ht_new_item(const char *k, const char *v) {
 	ht_item *i 	= malloc(sizeof(ht_item));
 
@@ -18,12 +27,18 @@ static ht_item* ht_new_item(const char *k, const char *v) {
 	return i;
 }
 
+/*
+ * Deletes the ht_item "i"
+ */
 static void ht_del_item(ht_item *i) {
 	free(i->key);
 	free(i->value);
 	free(i);
 }
 
+/*
+ * Creates a new tash table
+ */
 ht_hash_table *ht_new() {
 	ht_hash_table *ht = malloc(sizeof(ht_hash_table));
 
@@ -34,6 +49,9 @@ ht_hash_table *ht_new() {
 	return ht;
 }
 
+/*
+ * Deletes the hash table "ht"
+ */
 void ht_del_hash_table(ht_hash_table *ht) {
 	for(int i = 0; i < ht->size; i++) {
 		ht_item *item = ht->items[i];
@@ -46,7 +64,13 @@ void ht_del_hash_table(ht_hash_table *ht) {
 	free(ht);
 }
 
-static int ht_hash(const char *s, const int a, const int m) {
+/*
+ * Creates a hash for "s", an int between 0 and "m", 
+ * where "a" is a prime number larger than size of alphabet
+ */
+static int ht_hash(
+	const char *s, const int a, const int m
+) {
 	long hash = 0;
 	const int len_s = strlen(s);
 
@@ -58,6 +82,10 @@ static int ht_hash(const char *s, const int a, const int m) {
 	return (int)hash;
 }
 
+/*
+ * Creates a hash for "s", between 0 and "num_buckets",
+ * respecting the number of "attempts"
+ */
 static int ht_get_hash(
 	const char *s, const int num_bucekts, const int attempts
 ) {
@@ -67,7 +95,12 @@ static int ht_get_hash(
 	return (hash_a + (attempts * (hash_b + 1))) % num_bucekts;
 }
 
-void ht_insert(ht_hash_table *ht, const char *key, const char *value) {
+/*
+ * Inserts the "key": "value" pair into the hash table
+ */
+void ht_insert(
+	ht_hash_table *ht, const char *key, const char *value
+) {
 	ht_item *item = ht_new_item(key, value);
 	ht_item *curr_item;
 
@@ -91,6 +124,10 @@ void ht_insert(ht_hash_table *ht, const char *key, const char *value) {
 	ht->count++;
 }
 
+/*
+ * Returns the value of "key", or NULL if the key doesn't exist
+ * Updates the value of "key", if it already exists
+ */
 char *ht_search(ht_hash_table *ht, const char *key) {
 	ht_item *item;
 
@@ -110,6 +147,9 @@ char *ht_search(ht_hash_table *ht, const char *key) {
 	return NULL;
 }
 
+/*
+ * Deletes an existing "key": "value" pair from the hash table
+ */
 void ht_delete(ht_hash_table *ht, const char *key) {
 	ht_item *item;
 

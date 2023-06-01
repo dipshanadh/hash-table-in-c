@@ -1,8 +1,14 @@
+/*
+ * an item in the hash table
+ */
 typedef struct {
 	char *key;
 	char *value;
 } ht_item;
 
+/*
+ * hash table structure
+ */
 typedef struct {
 	int size;
 	int count;
