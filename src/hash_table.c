@@ -77,6 +77,13 @@ void ht_insert(ht_hash_table *ht, const char *key, const char *value) {
 	do {
 		index		= ht_get_hash(item->key, ht->size, i);
 		curr_item 	= ht->items[index];
+
+		if(curr_item != NULL && strcmp(curr_item->key, key) == 0) {
+			ht_del_item(curr_item);
+			ht->items[index] = item;
+			return;
+		}
+
 		i++;
 	} while(curr_item != NULL && curr_item != &HT_DELETED_ITEM);
 
@@ -118,7 +125,6 @@ void ht_delete(ht_hash_table *ht, const char *key) {
 				ht_del_item(item);
 				ht->items[index] = &HT_DELETED_ITEM;
 			}
-
 
 		i++;
 	} while(item != NULL);
