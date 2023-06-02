@@ -26,8 +26,15 @@ int main() {
 	 * Update items
 	 */
 	ht_insert(ht, "hobby", "coding");
-	printf("\n%s", ht_search(ht, "hobby"));
+	printf("\n");
+	printf("%s", ht_search(ht, "hobby"));
 
+	/*
+	 * Delete items
+	 */
+	ht_delete(ht, "name");
+	ht_delete(ht, "country");
+	ht_delete(ht, "hobby");
 
 	/*
 	 * Delete the hash table

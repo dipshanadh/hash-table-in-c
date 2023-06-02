@@ -1,8 +1,15 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
 #include "hash_table.h"
+#include "prime.h"
+
+/*
+ * Initial base size of hash table
+ */
+static const int HT_BASE_SIZE = 1;
 
 /*
  * "HT_PRIME_1" and "HT_PRIME_2" are values in hashing algorithm
@@ -37,16 +44,57 @@ static void ht_del_item(ht_item *i) {
 }
 
 /*
- * Creates a new tash table
+ * Creates a new hash table of a particular size
  */
-ht_hash_table *ht_new() {
+static ht_hash_table *ht_new_sized(const int size) {
 	ht_hash_table *ht = malloc(sizeof(ht_hash_table));
 
-	ht->size 	= 64;
+	ht->size 	= next_prime(size);
 	ht->count 	= 0;
 	ht->items	= calloc((size_t)ht->size, sizeof(ht_item));
 
 	return ht;
+}
+
+/*
+ * Creates a new hash table
+ */
+ht_hash_table *ht_new() {
+	return ht_new_sized(HT_BASE_SIZE);
+}
+
+/*
+ * Resizes "ht" according to "size"
+ */
+static void ht_resize(ht_hash_table *ht, const int size) {
+	if(size < HT_BASE_SIZE)
+		return;
+
+	// Create temporary new hash table to store items here
+	ht_hash_table *new_ht = ht_new_sized(size);
+
+	for(int i = 0; i < ht->size; i++) {
+		ht_item *item = ht->items[i];
+
+		if(item != NULL && item != &HT_DELETED_ITEM)
+			ht_insert(new_ht, item->key, item->value);
+	}
+
+	// Swap the size of ht
+	const int tmp_size 	= ht->size;
+	ht->size 		= new_ht->size;
+	new_ht->size	= tmp_size;
+
+	// Set the count to match the count of new_ht
+	ht->count		= new_ht->count;
+
+	// Swap the items array of ht and new_ht
+	ht_item **tmp_items = ht->items;
+	ht->items		= new_ht->items;
+	new_ht->items	= tmp_items;
+
+
+	ht_del_hash_table(new_ht);
 }
 
 /*
@@ -101,6 +149,12 @@ static int ht_get_hash(
 void ht_insert(
 	ht_hash_table *ht, const char *key, const char *value
 ) {
+	// resize up if load is greater than 70
+	const int load = ht->count * 100 / ht->size;
+
+	if(load > 70)
+		ht_resize(ht, ht->size * 2);
+
 	ht_item *item = ht_new_item(key, value);
 	ht_item *curr_item;
 
@@ -111,11 +165,16 @@ void ht_insert(
 		index		= ht_get_hash(item->key, ht->size, i);
 		curr_item 	= ht->items[index];
 
-		if(curr_item != NULL && strcmp(curr_item->key, key) == 0) {
-			ht_del_item(curr_item);
-			ht->items[index] = item;
-			return;
-		}
+		if(
+			curr_item != NULL && 
+			curr_item != &HT_DELETED_ITEM
+		) 
+			// Update the value, if item already exists
+			if(strcmp(curr_item->key, key) == 0) {
+				ht_del_item(curr_item);
+				ht->items[index] = item;
+				return;
+			}
 
 		i++;
 	} while(curr_item != NULL && curr_item != &HT_DELETED_ITEM);
@@ -151,6 +210,12 @@ char *ht_search(ht_hash_table *ht, const char *key) {
  * Deletes an existing "key": "value" pair from the hash table
  */
 void ht_delete(ht_hash_table *ht, const char *key) {
+	// resize down if load is less than 10
+	const int load = ht->count * 100 / ht->size;
+
+	if(load < 10)
+		ht_resize(ht, ht->size / 2);
+
 	ht_item *item;
 
 	int index;
@@ -160,14 +225,17 @@ void ht_delete(ht_hash_table *ht, const char *key) {
 		index	= ht_get_hash(key, ht->size, i);
 		item	= ht->items[index];
 
-		if(item != &HT_DELETED_ITEM)
+		if(
+			item != NULL &&
+			item != &HT_DELETED_ITEM
+		) 
 			if(strcmp(item->key, key) == 0) {
 				ht_del_item(item);
 				ht->items[index] = &HT_DELETED_ITEM;
 			}
 
 		i++;
-	} while(item != NULL);
+	} while(item != NULL && item != &HT_DELETED_ITEM);
 
 	ht->count--;
 }
